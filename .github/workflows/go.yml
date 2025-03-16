@@ -24,7 +24,7 @@ jobs:
     - name: Build
       run:
         mkdir -p ./build
-        go build -v . -o ./build
+        go build -v . -o ./build/myprogram
 
     - name: Test
       run: go test -v ./test
