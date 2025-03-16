@@ -23,8 +23,7 @@ jobs:
 
     - name: Build
       run: |
-        mkdir -p ./build
-        go build -v . -o ./build/myprogram
+        go build -v ./src
 
     - name: Test
       run: go test -v ./test
