@@ -1,0 +1,3 @@
+= os--char-dev-2--u2 
+
+A simple client application for demo of character device driver in userspace
