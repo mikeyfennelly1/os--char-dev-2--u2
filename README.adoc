@@ -1,3 +1,53 @@
 = os--char-dev-2--u2 
+:toc:
 
-A simple client application for demo of character device driver in userspace
+A server application for demonstrating the use of the character device driver for Operating Systems major.
+
+== What is this app?
+
+This is a multithreaded server. It listens for connections on a TCP port, and exposes a REST API. Under the hood when the application receives a connection, it creates a new goroutine (thread) to handle the connection.
+
+The device then processes the request, and gets the desired data from the device.
+
+*The device has 3 modes*, each of which corresponds to an GET endpoint. Those being:
+
+1. CPU -> https://<server_ip>:<server_port>/cpu
+2. MEMORY -> https://<server_ip>:<server_port>/memory
+3. DISK -> https://<server_ip>:<server_port>/disk
+
+Under the hood, when a connection is made the server process uses a thread (goroutine) to handle the request. It then responds and returns to the thread pool. It then uses the `ioctl` function of the character device to change the device `current_info_type` to the requested type. It then makes use of the  `read()` function on `/dev/sysinfo` to get the desired information in JSON format, which it then sends back to the client in a byte stream.
+
+=== The original goals of this application
+
+1. To be multithreaded.
+2. To demonstrate the usage of the device in userspace.
+
+== Dev clone and run
+
+=== Download Go
+
+[source, bash]
+----
+# Download the Go 1.23.1 tarball
+wget https://go.dev/dl/go1.23.1.linux-amd64.tar.gz
+
+# Extract the tarball to /usr/local
+sudo tar -C /usr/local -xzf go1.23.1.linux-amd64.tar.gz
+
+# Add Go binary directory to your PATH
+echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
+
+# Apply the changes
+source ~/.bashrc
+----
+
+=== Clone this repo
+
+[source, bash]
+----
+git clone git@github.com:mikeyfennelly1/os--char-dev-2--u2.git
+----
+
+=== Download a server binary for your architecture
+
+See the releases page.
