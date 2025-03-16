@@ -22,6 +22,10 @@ Under the hood, when a connection is made the server process uses a thread (goro
 1. To be multithreaded.
 2. To demonstrate the usage of the device in userspace.
 
+== Download a server binary for your architecture
+
+See the releases page.
+
 == Dev clone and run
 
 === Download Go
@@ -47,7 +51,3 @@ source ~/.bashrc
 ----
 git clone git@github.com:mikeyfennelly1/os--char-dev-2--u2.git
 ----
-
-=== Download a server binary for your architecture
-
-See the releases page.
