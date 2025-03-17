@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mikeyfennelly1/os--char-dev-2--u2/src/sysinfo"
 	"github.com/stretchr/testify/require"
+	"syscall"
 	"testing"
 )
 
@@ -23,19 +24,20 @@ func TestChangeIoctlToDisk(t *testing.T) {
 }
 
 func TestGetSysinfoStringDisk(t *testing.T) {
-	disk_result, err := sysinfo.GetSysinfoString(sysinfo.DISK_IOCTL)
+	syscall.Seteuid(1000)
+	diskResult, err := sysinfo.GetSysinfoJSON(sysinfo.DISK_IOCTL)
 	require.NoError(t, err)
-	fmt.Println(*disk_result)
+	fmt.Println(*diskResult)
 }
 
 func TestGetSysinfoStringMemory(t *testing.T) {
-	disk_result, err := sysinfo.GetSysinfoString(sysinfo.MEMORY_IOCTL)
+	memoryResult, err := sysinfo.GetSysinfoJSON(sysinfo.MEMORY_IOCTL)
 	require.NoError(t, err)
-	fmt.Println(*disk_result)
+	fmt.Println(*memoryResult)
 }
 
 func TestGetSysinfoStringCPU(t *testing.T) {
-	disk_result, err := sysinfo.GetSysinfoString(sysinfo.CPU_IOCTL)
+	disk_result, err := sysinfo.GetSysinfoJSON(sysinfo.CPU_IOCTL)
 	require.NoError(t, err)
 	fmt.Println(*disk_result)
 }

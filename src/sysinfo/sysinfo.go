@@ -8,9 +8,7 @@ import (
 	"os"
 )
 
-const port = 8989
-const hostIP = "127.0.0.1"
-const sysinfoDeviceName = "/dev/sysinfo_cdev"
+const sysinfoDeviceName = "/dev/sysinfo"
 
 type IOCTLValue int32
 
@@ -20,11 +18,11 @@ const (
 	DISK_IOCTL   IOCTLValue = 3
 )
 
-func GetSysinfoString(ioctlVal IOCTLValue) (*string, error) {
+func GetSysinfoJSON(ioctlVal IOCTLValue) (*string, error) {
 	// open the device via the open() syscall
 	sysinfoDevice, err := os.OpenFile(sysinfoDeviceName, unix.O_RDWR, 0666)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open device file: %d\n", sysinfoDeviceName)
+		return nil, fmt.Errorf("Could not open device file: %s\n", sysinfoDeviceName)
 	}
 	defer sysinfoDevice.Close()
 
