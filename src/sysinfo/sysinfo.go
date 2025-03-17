@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/sys/unix"
 	"os"
+	"sync"
 )
 
 const sysinfoDeviceName = "/dev/sysinfo"
@@ -18,7 +19,12 @@ const (
 	DISK_IOCTL   IOCTLValue = 3
 )
 
+var mu sync.Mutex
+
 func GetSysinfoJSON(ioctlVal IOCTLValue) (*string, error) {
+	// lock mutex in critical section
+	mu.Lock()
+
 	// open the device via the open() syscall
 	sysinfoDevice, err := os.OpenFile(sysinfoDeviceName, unix.O_RDWR, 0666)
 	if err != nil {
@@ -39,9 +45,12 @@ func GetSysinfoJSON(ioctlVal IOCTLValue) (*string, error) {
 		return nil, err
 	}
 
-	json_str := string(buffer[:bytesRead])
+	// unlock the mutex after critical work done
+	mu.Unlock()
 
-	return &json_str, nil
+	jsonStr := string(buffer[:bytesRead])
+
+	return &jsonStr, nil
 }
 
 func ChangeSysinfoDevMode(cmd IOCTLValue) error {
@@ -50,9 +59,6 @@ func ChangeSysinfoDevMode(cmd IOCTLValue) error {
 		return fmt.Errorf("ChangeSysinfoDevMode: Could not open device file: %d\n", sysinfoDeviceName)
 	}
 	defer sysinfoDevice.Close()
-	fmt.Println("Opened device successfully\n")
-	fmt.Printf("file descriptor: %d\n", int(sysinfoDevice.Fd()))
-	fmt.Printf("command number: %d\n", uint(cmd))
 
 	err = unix.IoctlSetInt(int(sysinfoDevice.Fd()), uint(cmd), 0)
 	if err != nil {
