@@ -45,7 +45,7 @@ func handleClient(conn net.Conn) {
 	// Create a custom listener using the net.Conn
 	listener := &singleConnListener{conn: conn}
 
-	// Create an HTTP server with the sysInfoHandler
+	// Create a HTTP server with the sysInfoHandler
 	server := &http.Server{
 		Handler: http.HandlerFunc(sysInfoHandler), // Use the sysInfoHandler for requests
 	}
