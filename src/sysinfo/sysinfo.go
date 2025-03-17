@@ -4,6 +4,8 @@ package sysinfo
 
 import (
 	"fmt"
+	"golang.org/x/sys/unix"
+	"os"
 )
 
 const port = 8989
@@ -35,10 +37,40 @@ func GetSysinfoIoctlCMD(infoType InfoType) (IOCTLValue, error) {
 	}
 }
 
-//func getSysinfoString(infoType InfoType) (*string, error) {
-//	ioctlVal, err := getSysinfoIoctlCMD(infoType)
-//	if err != nil {
-//		return nil, fmt.Errorf(err.Error())
-//	}
-//
-//}
+func getSysinfoString(infoType InfoType) (*string, error) {
+	ioctlVal, err := GetSysinfoIoctlCMD(infoType)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+
+	sysinfoDevice, err := os.OpenFile(sysinfoDeviceName, unix.O_RDONLY, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("Could not open device file: %d\n", sysinfoDeviceName)
+	}
+	defer sysinfoDevice.Close()
+
+	err = changeSysinfoDevMode(sysinfoDevice, ioctlVal)
+	if err != nil {
+		return nil, fmt.Errorf("Could not perform ioctl on the device: %v\n", err)
+	}
+
+	buffer := make([]byte, 1024)
+
+	_, err = sysinfoDevice.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	json_str := string(buffer)
+
+	return &json_str, nil
+}
+
+func changeSysinfoDevMode(fd *os.File, cmd IOCTLValue) error {
+	err := unix.IoctlSetInt(int(fd.Fd()), uint(cmd), 0)
+	if err != nil {
+		return fmt.Errorf("Ioctl failed: %w", err)
+	}
+
+	return nil
+}
