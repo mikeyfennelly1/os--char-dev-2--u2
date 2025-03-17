@@ -10,64 +10,53 @@ import (
 
 const port = 8989
 const hostIP = "127.0.0.1"
-const sysinfoDeviceName = "/dev/sysinfo"
+const sysinfoDeviceName = "/dev/sysinfo_cdev"
 
-type InfoType string
 type IOCTLValue int32
 
 const (
-	MEMORY       InfoType   = "MEMORY"
-	DISK         InfoType   = "DISK"
-	CPU          InfoType   = "CPU"
-	MEMORY_IOCTL IOCTLValue = 1
-	DISK_IOCTL   IOCTLValue = 2
-	CPU_IOCTL    IOCTLValue = 3
+	CPU_IOCTL    IOCTLValue = 1
+	MEMORY_IOCTL IOCTLValue = 2
+	DISK_IOCTL   IOCTLValue = 3
 )
 
-func GetSysinfoIoctlCMD(infoType InfoType) (IOCTLValue, error) {
-	switch infoType {
-	case MEMORY:
-		return MEMORY_IOCTL, nil
-	case DISK:
-		return DISK_IOCTL, nil
-	case CPU:
-		return CPU_IOCTL, nil
-	default:
-		return -1, fmt.Errorf("Invalid IOCTL type: %s\n", infoType)
-	}
-}
-
-func getSysinfoString(infoType InfoType) (*string, error) {
-	ioctlVal, err := GetSysinfoIoctlCMD(infoType)
-	if err != nil {
-		return nil, fmt.Errorf(err.Error())
-	}
-
-	sysinfoDevice, err := os.OpenFile(sysinfoDeviceName, unix.O_RDONLY, 0666)
+func GetSysinfoString(ioctlVal IOCTLValue) (*string, error) {
+	// open the device via the open() syscall
+	sysinfoDevice, err := os.OpenFile(sysinfoDeviceName, unix.O_RDWR, 0666)
 	if err != nil {
 		return nil, fmt.Errorf("Could not open device file: %d\n", sysinfoDeviceName)
 	}
 	defer sysinfoDevice.Close()
 
-	err = changeSysinfoDevMode(sysinfoDevice, ioctlVal)
+	// change the mode of the device
+	err = ChangeSysinfoDevMode(ioctlVal)
 	if err != nil {
-		return nil, fmt.Errorf("Could not perform ioctl on the device: %v\n", err)
+		return nil, fmt.Errorf("Error performing ioctl on %v: %v\n", sysinfoDevice.Name(), err)
 	}
 
 	buffer := make([]byte, 1024)
 
-	_, err = sysinfoDevice.Read(buffer)
+	bytesRead, err := sysinfoDevice.Read(buffer)
 	if err != nil {
 		return nil, err
 	}
 
-	json_str := string(buffer)
+	json_str := string(buffer[:bytesRead])
 
 	return &json_str, nil
 }
 
-func changeSysinfoDevMode(fd *os.File, cmd IOCTLValue) error {
-	err := unix.IoctlSetInt(int(fd.Fd()), uint(cmd), 0)
+func ChangeSysinfoDevMode(cmd IOCTLValue) error {
+	sysinfoDevice, err := os.OpenFile(sysinfoDeviceName, unix.O_RDWR, 0666)
+	if err != nil {
+		return fmt.Errorf("ChangeSysinfoDevMode: Could not open device file: %d\n", sysinfoDeviceName)
+	}
+	defer sysinfoDevice.Close()
+	fmt.Println("Opened device successfully\n")
+	fmt.Printf("file descriptor: %d\n", int(sysinfoDevice.Fd()))
+	fmt.Printf("command number: %d\n", uint(cmd))
+
+	err = unix.IoctlSetInt(int(sysinfoDevice.Fd()), uint(cmd), 0)
 	if err != nil {
 		return fmt.Errorf("Ioctl failed: %w", err)
 	}
