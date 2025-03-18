@@ -41,3 +41,7 @@ func TestGetSysinfoStringCPU(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println(*disk_result)
 }
+
+func TestStartServer(t *testing.T) {
+	sysinfo.StartServer("8080", 10)
+}

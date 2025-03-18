@@ -10,9 +10,30 @@ import (
 )
 
 // Simple HTTP handler for the sysinfo response
-func sysInfoHandler(w http.ResponseWriter, r *http.Request) {
-	// Respond with some sysinfo or custom data
-	w.Write([]byte("Sysinfo: Everything is running smoothly!\n"))
+func cpuHandler(w http.ResponseWriter, r *http.Request) {
+	jsonStr, err := GetSysinfoJSON(CPU_IOCTL)
+	if err != nil {
+		w.Write([]byte("Error getting sysinfo " + err.Error()))
+	}
+	w.Write([]byte(*jsonStr))
+}
+
+// Simple HTTP handler for the sysinfo response
+func diskHandler(w http.ResponseWriter, r *http.Request) {
+	jsonStr, err := GetSysinfoJSON(DISK_IOCTL)
+	if err != nil {
+		w.Write([]byte("Error getting sysinfo " + err.Error()))
+	}
+	w.Write([]byte(*jsonStr))
+}
+
+// Simple HTTP handler for the sysinfo response
+func memoryHandler(w http.ResponseWriter, r *http.Request) {
+	jsonStr, err := GetSysinfoJSON(MEMORY_IOCTL)
+	if err != nil {
+		w.Write([]byte("Error getting sysinfo " + err.Error()))
+	}
+	w.Write([]byte(*jsonStr))
 }
 
 // Create a custom listener that serves HTTP requests over a single connection
@@ -42,13 +63,17 @@ func worker(taskChan chan net.Conn, wg *sync.WaitGroup) {
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
-	// Create a custom listener using the net.Conn
+	// Use the listener struct, passing the connection
 	listener := &singleConnListener{conn: conn}
 
 	// Create a HTTP server with the sysInfoHandler
 	server := &http.Server{
-		Handler: http.HandlerFunc(sysInfoHandler), // Use the sysInfoHandler for requests
+		Handler: http.DefaultServeMux, // Use the sysInfoHandler for requests
 	}
+
+	http.HandleFunc("/cpu", cpuHandler)
+	http.HandleFunc("/memory", memoryHandler)
+	http.HandleFunc("/disk", diskHandler)
 
 	// Serve HTTP requests via the custom listener (over the single connection)
 	err := server.Serve(listener)
@@ -88,6 +113,7 @@ func StartServer(port string, numWorkers int) {
 		return
 	}
 	defer ln.Close()
+	fmt.Printf("Server listening on port : %s\n", port)
 
 	// Create the worker pool
 	taskChan := createWorkerPool(numWorkers)
