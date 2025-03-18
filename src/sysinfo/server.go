@@ -71,10 +71,6 @@ func handleClient(conn net.Conn) {
 		Handler: http.DefaultServeMux, // Use the sysInfoHandler for requests
 	}
 
-	http.HandleFunc("/cpu", cpuHandler)
-	http.HandleFunc("/memory", memoryHandler)
-	http.HandleFunc("/disk", diskHandler)
-
 	// Serve HTTP requests via the custom listener (over the single connection)
 	err := server.Serve(listener)
 	if err != nil {
@@ -114,6 +110,10 @@ func StartServer(port string, numWorkers int) {
 	}
 	defer ln.Close()
 	fmt.Printf("Server listening on port : %s\n", port)
+
+	http.HandleFunc("/cpu", cpuHandler)
+	http.HandleFunc("/memory", memoryHandler)
+	http.HandleFunc("/disk", diskHandler)
 
 	// Create the worker pool
 	taskChan := createWorkerPool(numWorkers)
