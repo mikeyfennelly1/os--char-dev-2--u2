@@ -79,6 +79,8 @@ func handleClient(conn net.Conn) {
 	}
 }
 
+// create a worker goroutine (thread) pool of size
+// numWorkers
 func createWorkerPool(numWorkers int) chan net.Conn {
 	// Create a channel for goroutines to communicate
 	taskChan := make(chan net.Conn)
